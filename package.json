@@ -1,0 +1,21 @@
+{
+  "name": "aionrealm-alexa-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standalone MCP server for the AionRealm Alexa+ hackathon integration (Phase 1: ask_aion tool only).",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "MOCK_AION_BACKEND=true node src/server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "zod": "^3.24.1"
+  }
+}
