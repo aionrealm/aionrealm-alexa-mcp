@@ -77,17 +77,58 @@ test/
   healthz.contract.test.js      /healthz information-disclosure coverage
   ask_aion_schema.contract.test.js  anonymous-MVP schema coverage
 .env.example                    documented list of every environment variable this reads
-Dockerfile                      minimal Node 20 image for AWS App Runner (see "Deployment")
+Dockerfile                      minimal Node 20 image, an alternative deploy path (see "Deployment")
 LICENSE                         MIT
 ```
 
 ## Deployment
 
-A `Dockerfile` is included for the recommended smallest deployment path (AWS App Runner,
-building this image directly). It uses a minimal Node 20 base image, installs only production
-dependencies, and bakes in no secrets and no `.env` file — every variable in "Environment
-variables" above is supplied at deploy time by the hosting platform's own environment/secret
-configuration. Building or running the image locally does not itself deploy anything.
+This server is deployed and running on **AWS App Runner** — real AWS compute, not a simulated
+or planned deployment.
+
+```
+Alexa+ / MCP client
+        │  Streamable HTTP, Authorization: Bearer <MCP_SERVER_AUTH_TOKEN>
+        ▼
+AWS App Runner  (this repository's main branch, built and run directly by App Runner)
+        │  question only, no member/session identity
+        ▼
+AionRealm's Production Alexa integration endpoint  (authenticated separately, see
+        │                                            "AionRealm backend contract" below)
+        ▼
+Living Aion  (Aion, Keeper of the Realm)
+```
+
+**AWS services actually in use:**
+- **AWS App Runner** — hosts and runs this server. Builds directly from this public GitHub
+  repository's `main` branch (App Runner's own source-code build, Node 20 runtime) — no
+  container registry involved. Auto-deploy on push is intentionally **off**; a new commit
+  requires an explicit redeploy.
+- **AWS Secrets Manager** — holds `MCP_SERVER_AUTH_TOKEN` and `AION_BACKEND_API_KEY`. App
+  Runner injects them into the running container as environment variables at start time,
+  resolved via a Secrets Manager ARN reference — the values themselves are never written into
+  App Runner's own configuration, this repository, or any commit.
+- **AWS IAM** — a dedicated instance role, scoped to exactly one permission
+  (`secretsmanager:GetSecretValue`) on exactly the two secrets above. It cannot read any other
+  secret, role, or resource in the AWS account.
+- **Amazon CloudWatch** — App Runner's default logging destination for this service's
+  application and build logs.
+
+A `Dockerfile` is also included in this repository as an alternative, equivalent deployment
+path (e.g. for ECR-based hosting elsewhere) — it uses a minimal Node 20 base image, installs
+only production dependencies, and bakes in no secrets and no `.env` file. It is **not** what
+the current live App Runner deployment builds from (that deployment uses App Runner's native
+source-code build instead), but running or building it locally is safe and deploys nothing on
+its own.
+
+**Health check:** App Runner polls `GET /healthz` on this service. It returns only
+`{"status":"ok","service":"aionrealm-alexa-mcp"}` — see "Security boundaries" above for why it
+deliberately never includes the backend URL or any credential.
+
+**Required environment/secret names** (values are never in this repository — see "Environment
+variables" below for what each one is for): `MCP_SERVER_AUTH_TOKEN` and `AION_BACKEND_API_KEY`
+are Secrets Manager references; `AION_BACKEND_URL`, `MOCK_AION_BACKEND`, and `PORT` are plain
+App Runner environment variables.
 
 ## Setup
 
