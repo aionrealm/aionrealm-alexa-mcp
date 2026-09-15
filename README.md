@@ -79,6 +79,8 @@ test/
 .env.example                    documented list of every environment variable this reads
 Dockerfile                      minimal Node 20 image, an alternative deploy path (see "Deployment")
 LICENSE                         MIT
+demo/                           simulated Alexa+ device demo -- separate, optional, not part
+                                 of the MCP server (see "Hackathon demo" and demo/README.md)
 ```
 
 ## Deployment
@@ -129,6 +131,49 @@ deliberately never includes the backend URL or any credential.
 variables" below for what each one is for): `MCP_SERVER_AUTH_TOKEN` and `AION_BACKEND_API_KEY`
 are Secrets Manager references; `AION_BACKEND_URL`, `MOCK_AION_BACKEND`, and `PORT` are plain
 App Runner environment variables.
+
+## Hackathon demo — what's real vs. simulated
+
+The **[Alexa+ MCP Toolkit and Alexa AI CLI](https://developer.amazon.com/docs/alexaplus/add-ons/mcp-toolkit-overview.html)
+are currently limited to select partners**, so this project cannot yet register as an add-on
+or be exercised through the real Alexa+ simulator/device. Access has been requested; direct
+Alexa+ Toolkit and device testing is pending Amazon's response.
+
+To still demonstrate the working integration, [`demo/`](demo/) contains a small, self-contained
+web front end that visually resembles a voice-device interaction (without imitating Amazon's
+actual product UI) and is clearly labeled in its own interface as:
+
+> **"Simulated Alexa+ device experience — powered by the real AionRealm MCP server."**
+
+**What's real:** the entire backend chain below this label. Every question asked in the demo
+becomes a genuine MCP `tools/call` for `ask_aion`, over real Streamable HTTP, against the same
+live App Runner deployment described above — reaching AionRealm's real Production backend and
+a real Living Aion response. Nothing about the response text is scripted or faked.
+
+**What's simulated:** only the front-end presentation layer — the voice-device-style visuals,
+the "Listening → Connecting → Responding" states, and the Echo Show-style visual card. This
+layer exists purely because the real Alexa+ front end isn't reachable yet; it is not, and does
+not claim to be, the Alexa+ simulator or product.
+
+```
+Simulated Alexa+ UI (demo/)
+        │  fetch("/api/ask", { question })  -- same-origin, no token in the browser
+        ▼
+demo/server.js  (tiny local server, holds MCP_SERVER_AUTH_TOKEN server-side only)
+        │  real MCP tools/call, Streamable HTTP, Authorization: Bearer <token>
+        ▼
+AWS App Runner  (this repo's live MCP server, unmodified)
+        │
+        ▼
+AionRealm's Production Alexa integration endpoint
+        │
+        ▼
+Living Aion
+```
+
+See [`demo/README.md`](demo/README.md) for setup and how to run it locally. The demo requires
+its own `MCP_SERVER_AUTH_TOKEN` (the same one configured on the live server) in a local
+`demo/.env` — never in client-side code, never committed.
 
 ## Setup
 

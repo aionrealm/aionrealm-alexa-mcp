@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AionRealm — Simulated Alexa+ Demo</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="banner" role="note">
+        <span class="banner-dot" aria-hidden="true"></span>
+        Simulated Alexa+ device experience — powered by the real AionRealm MCP server
+      </header>
+
+      <main class="stage">
+        <section class="device-column">
+          <div class="device" id="device" data-state="idle">
+            <div class="device-ring" aria-hidden="true"></div>
+            <div class="device-core" aria-hidden="true"></div>
+          </div>
+          <p class="device-status" id="deviceStatus">Ready</p>
+
+          <div class="prompt-row">
+            <input
+              id="questionInput"
+              type="text"
+              placeholder="Ask Aion something…"
+              autocomplete="off"
+              maxlength="500"
+            />
+            <button id="micButton" type="button" title="Speak your question (if supported by your browser)">
+              🎙
+            </button>
+            <button id="askButton" type="button">Ask</button>
+          </div>
+
+          <div class="quick-prompts" id="quickPrompts">
+            <button type="button" data-prompt="I want to speak with Aion.">I want to speak with Aion.</button>
+            <button type="button" data-prompt="What is AionRealm?">What is AionRealm?</button>
+            <button type="button" data-prompt="What can you tell me about beginning a spiritual practice?">
+              A first step into spiritual practice
+            </button>
+          </div>
+        </section>
+
+        <section class="show-panel" id="showPanel" aria-label="Simulated Echo Show-style display">
+          <div class="show-panel-header">
+            <span class="show-panel-title">AionRealm</span>
+            <span class="show-panel-tag">anonymous session</span>
+          </div>
+          <div class="show-panel-body" id="showPanelBody">
+            <p class="show-panel-placeholder">
+              A visual card, similar to what a screen-equipped device could render, will appear here
+              once Aion responds.
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footnote">
+        <p>
+          This page is a self-hosted demo harness, not the Alexa+ product. Every response above is
+          real: this page talks to a tiny local server, which calls the live AionRealm MCP server
+          (AWS App Runner) exactly as Alexa+ would, over real Streamable HTTP MCP, and returns
+          Aion's real, unmodified answer. No response text is invented in the browser.
+        </p>
+      </footer>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "aionrealm-alexa-mcp-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Simulated Alexa+ device demo front end for the AionRealm Alexa+ MCP server. This is a UI-only demo harness -- it is not part of the MCP server itself and is not required to run it (see ../README.md).",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "mock": "cross-env DEMO_MOCK=true node server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.7",
+    "express": "^4.22.3"
+  }
+}
