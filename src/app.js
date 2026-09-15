@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 
 import express from "express";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -153,14 +153,33 @@ export async function createServer({
   // every method this endpoint supports -- an unauthenticated caller can
   // never create a new session (POST .../initialize) or reach an existing
   // one (POST/GET/DELETE with a session ID).
+  // Timing-safe: a plain `===` comparison leaks how many leading characters
+  // matched via response-time variance. timingSafeEqual requires equal-length
+  // buffers (it throws otherwise), so the length check must happen first --
+  // that branch alone is not exploitable, since it doesn't depend on any
+  // matched character count, only on total length.
+  function isValidBearerToken(header, expectedToken) {
+    if (typeof header !== "string") return false;
+    const expected = `Bearer ${expectedToken}`;
+    const providedBuf = Buffer.from(header, "utf8");
+    const expectedBuf = Buffer.from(expected, "utf8");
+    if (providedBuf.length !== expectedBuf.length) return false;
+    return timingSafeEqual(providedBuf, expectedBuf);
+  }
+
   function requireAuth(req, res, next) {
     if (!authToken) return next(); // no token configured: local-dev default
-    if (req.headers.authorization === `Bearer ${authToken}`) return next();
+    if (isValidBearerToken(req.headers.authorization, authToken)) return next();
     res.status(401).json({ error: "Unauthorized" });
   }
 
+  // Intentionally minimal and unauthenticated (App Runner and similar
+  // platforms need an unauthenticated health check). Must never include
+  // adapter.name, AION_BACKEND_URL, or any other infrastructure/credential
+  // detail -- this endpoint is reachable by anyone on the network path to
+  // this server, authenticated or not.
   app.get("/healthz", (req, res) => {
-    res.json({ ok: true, service: "aionrealm-alexa-mcp", adapter: adapter.name });
+    res.json({ status: "ok", service: "aionrealm-alexa-mcp" });
   });
 
   app.post(mcpPath, requireAuth, async (req, res) => {

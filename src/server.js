@@ -2,10 +2,13 @@ import "dotenv/config";
 
 import { createServer } from "./app.js";
 import { createAionAdapter } from "./adapters/aionAdapter.js";
+import { resolveAuthToken } from "./authConfig.js";
 
 const PORT = Number(process.env.PORT) || 3333;
 const MCP_PATH = process.env.MCP_PATH || "/mcp";
-const AUTH_TOKEN = process.env.MCP_SERVER_AUTH_TOKEN || null;
+// Throws and crashes startup if MCP_SERVER_AUTH_TOKEN is unset and
+// MCP_ALLOW_NO_AUTH=true was not explicitly set -- see authConfig.js.
+const AUTH_TOKEN = resolveAuthToken();
 
 const adapter = createAionAdapter();
 
@@ -16,8 +19,9 @@ const httpServer = app.listen(PORT, () => {
   console.log(`Aion backend adapter: ${adapter.name}`);
   if (!AUTH_TOKEN) {
     console.warn(
-      "[warning] MCP_SERVER_AUTH_TOKEN is not set -- this endpoint accepts unauthenticated " +
-        "requests. Fine for local development; set it before exposing this server publicly.",
+      "[warning] Running with MCP_ALLOW_NO_AUTH=true -- this endpoint accepts unauthenticated " +
+        "requests. This must only ever be used for local development. Set MCP_SERVER_AUTH_TOKEN " +
+        "(and unset MCP_ALLOW_NO_AUTH) before exposing this server publicly.",
     );
   }
 });

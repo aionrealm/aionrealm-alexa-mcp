@@ -11,6 +11,15 @@ const MAX_QUESTION_LENGTH = 2000;
  * AionRealm's backend remains the sole source of truth for authentication,
  * Living Aion context, member data, safety rules, and response generation.
  *
+ * Anonymous-MVP scope: the exposed schema intentionally accepts only
+ * `question`. member_id/session_id were removed from the public MCP tool
+ * schema -- this server has no account-linking/authenticated-member
+ * capability yet, and exposing those fields would suggest a capability
+ * that doesn't exist. The AionRealm backend contract itself is unchanged
+ * (see httpAionAdapter.js): it still always sends member_id/session_id as
+ * null, exactly as it did before -- only what this MCP tool accepts from
+ * a *caller* changed, not what AionRealm receives.
+ *
  * @param {import("@modelcontextprotocol/sdk/server/mcp.js").McpServer} server
  * @param {import("./adapters/httpAionAdapter.js").AionAdapter} adapter
  */
@@ -20,7 +29,8 @@ export function registerAskAionTool(server, adapter) {
     {
       title: "Ask Aion",
       description:
-        "Ask AionRealm's Living Aion guide a question and receive Aion's response. " +
+        "Ask AionRealm's Living Aion guide a question and receive Aion's response, " +
+        "anonymously -- no AionRealm account or member context is used or required. " +
         "This tool only relays the question to AionRealm's own backend and returns Aion's " +
         "answer -- it does not generate, store, or interpret spiritual or member intelligence " +
         "itself; AionRealm remains authoritative for authentication, context, safety rules, " +
@@ -33,23 +43,7 @@ export function registerAskAionTool(server, adapter) {
             MAX_QUESTION_LENGTH,
             `question must be ${MAX_QUESTION_LENGTH} characters or fewer`,
           )
-          .describe("The member's question for Aion, in natural language."),
-        member_id: z
-          .string()
-          .optional()
-          .describe(
-            "Optional AionRealm member identifier, intended for once Alexa+ account " +
-              "linking is added in a later phase. Omit for anonymous/guest questions. The " +
-              "MCP layer passes this through unchanged; it does not look up or validate it.",
-          ),
-        session_id: z
-          .string()
-          .optional()
-          .describe(
-            "Optional conversation/session identifier from the calling surface (e.g. an " +
-              "Alexa+ conversation turn), passed through unchanged so AionRealm can maintain " +
-              "its own conversation context. The MCP layer does not interpret or store this.",
-          ),
+          .describe("The caller's question for Aion, in natural language."),
       },
       annotations: {
         title: "Ask Aion",
@@ -59,9 +53,9 @@ export function registerAskAionTool(server, adapter) {
         openWorldHint: true,
       },
     },
-    async ({ question, member_id: memberId, session_id: sessionId }) => {
+    async ({ question }) => {
       try {
-        const result = await adapter.askAion({ question, memberId, sessionId });
+        const result = await adapter.askAion({ question });
 
         if (!result || typeof result.text !== "string" || !result.text.trim()) {
           throw new Error("Aion backend returned an empty response.");

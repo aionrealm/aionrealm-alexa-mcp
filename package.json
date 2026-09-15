@@ -4,12 +4,13 @@
   "private": true,
   "description": "Standalone MCP server for the AionRealm Alexa+ hackathon integration (Phase 1: ask_aion tool only).",
   "type": "module",
+  "license": "MIT",
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "start": "node src/server.js",
-    "dev": "MOCK_AION_BACKEND=true node src/server.js",
+    "dev": "MOCK_AION_BACKEND=true MCP_ALLOW_NO_AUTH=true node src/server.js",
     "test": "node --test test/*.test.js"
   },
   "dependencies": {
